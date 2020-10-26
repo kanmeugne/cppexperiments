@@ -18,6 +18,10 @@ execute_process(
 if(result)
 	message(FATAL_ERROR "CMake step for googletest failed: ${result}")
 endif()
+
+##################
+# Build GoogleTest
+
 execute_process(
 	COMMAND ${CMAKE_COMMAND} --build .
 	RESULT_VARIABLE result
@@ -33,10 +37,10 @@ add_subdirectory(
 ##############################
 # organize include directories
 
-set(GTEST_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/build/googletest-build/include/)
+set(GTEST_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/build/googletest-src/googlemock/include/)
 set(TEST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 file(GLOB_RECURSE TEST_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
-include_directories(${GTEST_INCLUDE_DIR} ${TEST_INCLUDE_DIR})
+include_directories(${GTEST_INCLUDE_DIR} ${TEST_INCLUDE_DIR} ${TOOLSET_INCLUDE_DIR})
 
 add_executable (${BINARY} ${TEST_SRC_FILES})
 add_test(NAME ${BINARY} COMMAND ${BINARY})
