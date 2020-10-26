@@ -16,8 +16,8 @@ set(
     ${CMAKE_SOURCE_DIR}/build/${CMAKE_GENERATOR_PLATFORM}/${CMAKE_BUILD_TYPE}/
 )
 
-project (tddwithgtest C CXX)
+project (toolset C CXX)
 
 # Incluez les sous-projets
-add_subdirectory ("App")
+add_subdirectory ("toolset")
 add_subdirectory("tests")
