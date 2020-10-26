@@ -7,8 +7,8 @@ namespace utils
     class MyParser
     {
     public:
-        MyParser() = default;
-        ~MyParser() = default;
+        MyParser();
+        ~MyParser();
 
         void convertToLowerCase(const std::string &, std::string &);
         void convertToUpperCase(const std::string &, std::string &);
