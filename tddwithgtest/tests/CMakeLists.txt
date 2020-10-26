@@ -30,18 +30,22 @@ execute_process(
 if(result)
   message(FATAL_ERROR "Build step for googletest failed: ${result}")
 endif()
+
+# Prevent overriding the parent project's compiler/linker
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory(
 	${CMAKE_SOURCE_DIR}/build/googletest-src
 	${CMAKE_SOURCE_DIR}/build/googletest-build
+  EXCLUDE_FROM_ALL
 )
 ##############################
 # organize include directories
 
-set(GTEST_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/build/googletest-src/googlemock/include/)
+set(GTEST_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/build/googletest-src/googlemock/include/ ${CMAKE_SOURCE_DIR}/build/googletest-src/googletest/include/)
 set(TEST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 file(GLOB_RECURSE TEST_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 include_directories(${GTEST_INCLUDE_DIR} ${TEST_INCLUDE_DIR} ${TOOLSET_INCLUDE_DIR})
 
 add_executable (${BINARY} ${TEST_SRC_FILES})
+target_link_libraries(${BINARY} ${CMAKE_PROJECT_NAME} gmock_main)
 add_test(NAME ${BINARY} COMMAND ${BINARY})
-target_link_libraries(${BINARY} PUBLIC ${CMAKE_PROJECT_NAME}_lib gtest)
