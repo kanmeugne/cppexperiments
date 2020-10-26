@@ -263,3 +263,4 @@ __pycache__/
 # cmake config
 build/
 bin/
+.vscode
