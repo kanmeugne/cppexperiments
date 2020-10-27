@@ -1,5 +1,4 @@
 # CMakeList.txt : CMake project
-cmake_minimum_required (VERSION 3.8)
 
 set(BINARY ${CMAKE_PROJECT_NAME}_test)
 
