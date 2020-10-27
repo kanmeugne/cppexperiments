@@ -36,16 +36,35 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory(
 	${CMAKE_SOURCE_DIR}/build/googletest-src
 	${CMAKE_SOURCE_DIR}/build/googletest-build
-  EXCLUDE_FROM_ALL
+	EXCLUDE_FROM_ALL
 )
 ##############################
 # organize include directories
 
-set(GTEST_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/build/googletest-src/googlemock/include/ ${CMAKE_SOURCE_DIR}/build/googletest-src/googletest/include/)
-set(TEST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/)
-file(GLOB_RECURSE TEST_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
-include_directories(${GTEST_INCLUDE_DIR} ${TEST_INCLUDE_DIR} ${TOOLSET_INCLUDE_DIR})
-
+set(
+	GTEST_INCLUDE_DIR
+	${CMAKE_SOURCE_DIR}/build/googletest-src/googlemock/include/
+	${CMAKE_SOURCE_DIR}/build/googletest-src/googletest/include/
+)
+set(
+	TEST_INCLUDE_DIR
+	${CMAKE_CURRENT_SOURCE_DIR}/include/
+)
+file(
+	GLOB_RECURSE
+	TEST_SRC_FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+)
+include_directories(
+	${GTEST_INCLUDE_DIR}
+	${TEST_INCLUDE_DIR}
+	${TOOLSET_INCLUDE_DIR}
+)
+SET(COVERAGE OFF CACHE BOOL "Coverage")
 add_executable (${BINARY} ${TEST_SRC_FILES})
-target_link_libraries(${BINARY} ${CMAKE_PROJECT_NAME} gmock_main)
-add_test(NAME ${BINARY} COMMAND ${BINARY})
+if (COVERAGE)
+    target_compile_options(${BINARY} PRIVATE --coverage )
+    target_link_libraries(${BINARY} PRIVATE ${CMAKE_PROJECT_NAME} gmock_main --coverage)
+else()
+	target_link_libraries(${BINARY} ${CMAKE_PROJECT_NAME} gmock_main)
+endif()
