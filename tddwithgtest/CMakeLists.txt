@@ -1,6 +1,5 @@
-# CMakeList.txt : Upper level configuration file (here you can add subprojects and/or manage external depenencies)
-# et incluez les sous-projets ici.
-#
+# CMakeList.txt : Upper level configuration file
+
 cmake_minimum_required (VERSION 3.8)
 
 set(
@@ -18,6 +17,6 @@ set(
 
 project (toolset C CXX)
 
-# Incluez les sous-projets
+# sub projects
 add_subdirectory ("toolset")
 add_subdirectory("tests")

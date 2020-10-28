@@ -1,10 +1,9 @@
-# CMakeList.txt : CMake project
 cmake_minimum_required (VERSION 3.8)
 
 set(BINARY ${CMAKE_PROJECT_NAME}_test)
 
-############################
-# Configure GoogleTest build
+################################
+# Configure and GoogleTest build
 
 configure_file(
     ${CMAKE_SOURCE_DIR}/deps/gtest/CMakeLists.txt.in
@@ -18,9 +17,6 @@ execute_process(
 if(result)
 	message(FATAL_ERROR "CMake step for googletest failed: ${result}")
 endif()
-
-##################
-# Build GoogleTest
 
 execute_process(
 	COMMAND ${CMAKE_COMMAND} --build .
@@ -38,6 +34,7 @@ add_subdirectory(
 	${CMAKE_SOURCE_DIR}/build/googletest-build
 	EXCLUDE_FROM_ALL
 )
+
 ##############################
 # organize include directories
 
@@ -60,11 +57,5 @@ include_directories(
 	${TEST_INCLUDE_DIR}
 	${TOOLSET_INCLUDE_DIR}
 )
-SET(COVERAGE OFF CACHE BOOL "Coverage")
 add_executable (${BINARY} ${TEST_SRC_FILES})
-if (COVERAGE)
-    target_compile_options(${BINARY} PRIVATE --coverage )
-    target_link_libraries(${BINARY} PRIVATE ${CMAKE_PROJECT_NAME} gmock_main --coverage)
-else()
-	target_link_libraries(${BINARY} ${CMAKE_PROJECT_NAME} gmock_main)
-endif()
+target_link_libraries(${BINARY} ${CMAKE_PROJECT_NAME} gmock_main)
