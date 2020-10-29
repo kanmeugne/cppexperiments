@@ -1,6 +1,6 @@
 # Getting started with TDD in C++ with CMake, Googletest and Git
 
-## Part 1/2 : Setting up the environment and get pass __test zero__
+## Part 1/3 : Setting up the environment and get pass __test zero__
 
 Le TDD fait référence à une approche de developpement informatique dans laquelle l'écriture et la validation de tests unitaires simples conditionnent la moindre évolution de code. Cette aproche permet de garantir une qualité optimale du code à n'importe étape du développement.
 
@@ -222,8 +222,8 @@ int main(int argc, char** argv)
 Dans l'état actuel notre test zero passe! Les commandes :
 
 ```bash
-> cd build && cmake ..
-> cmake --build . --config Debug
+> cd build && cmake -DCMAKE_BUILD_TYPE=Debug ..
+build> cmake --build . --config Debug
 ```
 
 génère un makefile (fichier `.sln` sous windows avec [visual studio][7]) et le compile. A la fin de la compilation, on a les cibles correctement générée:
@@ -255,7 +255,7 @@ génère un makefile (fichier `.sln` sous windows avec [visual studio][7]) et le
 La commande :
 
 ```bash
-> ../bin/Debug/toolset_test
+build> ../bin/Debug/toolset_test
 ```
 
 s'exécute normalement et renvoie:
@@ -266,13 +266,13 @@ s'exécute normalement et renvoie:
 [  PASSED  ] 0 tests.
 ```
 
-Rien de plus normal! Car aucun test n'a été défini pour l'instant. Cependant les choses sérieuse vont pouvoir commencer. on va véritablement entrer dans le cercle vertueux du TDD après le test zero. 
+Rien de plus normal! Car aucun test n'a été défini pour l'instant. Cependant les choses sérieuses vont pouvoir commencer. On va véritablement entrer dans le cercle vertueux du TDD après ce test zero. 
 
-NB: les sources sont disponibles sur [github][8], pour les impatients.
+**NB**: les sources sont disponibles sur [github][8], pour les impatients.
 
-## Part 2/2 : Red, Green, Refactor
+## Part 2/3 : Red, Green, Refactor
 
-Un petit rappel un peu plus détaillé du mindset du developpeur TDD (traduit de l'anglais depuis cet excellent [ouvrage][9]) :
+Un petit rappel un peu plus détaillé du [mindset du developpeur TDD][9] :
 1. écrire des petits tests
 2. s'assurer que les tests échouent dans un premier temps
 3. écrire le code qui permet passer le test
@@ -281,12 +281,367 @@ Un petit rappel un peu plus détaillé du mindset du developpeur TDD (traduit de
 6. s'assurer que le test passe toujours
 7. retourner à l'étape 1.
 
-Commençons à nous interesser au contenu de notre lib. Pour rappel, elle contient un parseur capable de réaliser les opérations suivantes:
+Revenons au contenu de notre lib. Pour rappel, elle contient un parseur capable de réaliser les opérations suivantes:
 - *convertToLowerCase* : convertit un mot ou une phrase en minuscule
 - *convertToUpperCase* : convertit un mot ou une phrase en majuscule
 
-On peut donc déjà définir notre premier test unitaire qui échouera. C'est l'occasion d'introduire les fonctionnalité de la suite googletest notamment la MACRO
+On peut déjà définir notre premier test unitaire qui échouera.
 
+```c++
+class ParserTest : public Test{};
+
+TEST(ParserTest, Parser_LowerSingleLetter)
+{
+    std::string output = "";
+    std::string input = "L";
+    std::string expected = "l";
+    MyParser parser;
+    parser.convertToLowerCase(input, output);
+	ASSERT_EQ(output, "l");
+}
+// ...
+```
+### The TEST Macro
+
+C'est l'occasion d'introduire les fonctionnalités de la suite googletest notamment la MACRO `TEST`, qui permet de définir un test unitaire, et la MACRO `ASSERT_EQ` qui permet de tester si 2 variables sont égale on la même valeur. Notons également la déclaration de la classe `ParserTest` --- une manière de définir un groupe de tests (ou, dit autrement, une thématique de test).
+
+Le test défini ci dessus est un test simple (une assertion) avec un objectif exprimable en langage naturel : *le parseur doit transformer la lettre L (majuscule) en la lettre l (minuscule)*.
+
+
+### Remember : tests should fail first
+
+Pour l'instant le test échoue car la classe `MyParser` n'est pas vraiment définie. Appliquons les modifications suivantes pour avancer. Tout d'abord le fichier `MyParser.h`:
+
+```c++
+#include "MyParser.h"
+
+//MyParser::convertToLowerCase
+void MyParser::convertToLowerCase(const std::string &input, std::string &output)
+{
+    output = "";
+}
+
+//MyParser::MyParser
+MyParser::MyParser()
+{
+}
+
+//MyParser::~MyParser
+MyParser::~MyParser()
+{
+}
+```
+
+Le test ne passe pas, mais lorsqu'on qu'on refait les mêmes commande que tout à l'heure, la console est plus verbeuse :
+
+```bash
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ParserTest
+[ RUN      ] ParserTest.Parser_LowerSingleLetter
+/home/patrick/Documents/Projects/cppexperiments/tddwithgtest/tests/src/main.cpp:15: Failure
+Expected equality of these values:
+  output
+    Which is: ""
+  "l"
+[  FAILED  ] ParserTest.Parser_LowerSingleLetter (0 ms)
+[----------] 1 test from ParserTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 0 tests.
+[  FAILED  ] 1 test, listed below:
+[  FAILED  ] ParserTest.Parser_LowerSingleLetter
+
+ 1 FAILED TEST
+```
+Il est question, à ce niveau de modifier le fichier ``MyParser.cpp`` pour que le test passe. Allons au plus simple et posons que la fonction `MyParser::convertToLowerCase` parcourt la chaine de caractères, transforme en minuscules tout les caractères et les rajoute dans la variable de sortie.
+
+```c++
+//MyParser::convertToLowerCase
+void MyParser::convertToLowerCase(const std::string &input, std::string &output)
+{
+    output = "";
+    for (auto c : input)
+        output.push_back(tolower(c));
+}
+```
+
+Cette fois-ci le test passe :
+```bash
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ParserTest
+[ RUN      ] ParserTest.Parser_LowerSingleLetter
+[       OK ] ParserTest.Parser_LowerSingleLetter (0 ms)
+[----------] 1 test from ParserTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+```
+La deuxième fonction du parser ressemble beaucoup à la première. On reproduit ici exactement le même schema. D'abord le test qui échoue :
+
+```c++
+TEST(ParserTest, Parser_UpperSingleLetter)
+{
+    std::string output = "";
+    std::string input = "l";
+    std::string expected = "L";
+    MyParser parser;
+    parser.convertToUpperCase(input, output);
+	ASSERT_EQ(output, "L");
+}
+```
+
+Et ensuite les modifications de code qui nous permettent de valider le test.
+
+- le fichier `./toolset/include/MyParser.h`:
+
+```c++
+class MyParser
+{
+public:
+    MyParser();
+    ~MyParser();
+
+    void convertToLowerCase(const std::string &, std::string &);
+    void convertToUpperCase(const std::string &, std::string &);
+};
+```
+
+- le fichier `./toolset/src/MyParser.cpp`:
+
+```c++
+//MyParser::convertToUpperCase
+void MyParser::convertToUpperCase(const std::string &input, std::string &output)
+{
+    output = "";
+    for (auto c : input)
+        output.push_back(toupper(c));
+}
+```
+L'exécution des tests renvoie le résultat suivant :
+
+```bash
+[==========] Running 2 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 2 tests from ParserTest
+[ RUN      ] ParserTest.Parser_LowerSingleLetter
+[       OK ] ParserTest.Parser_LowerSingleLetter (0 ms)
+[ RUN      ] ParserTest.Parser_UpperSingleLetter
+[       OK ] ParserTest.Parser_UpperSingleLetter (0 ms)
+[----------] 2 tests from ParserTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 2 tests from 1 test suite ran. (0 ms total)
+[  PASSED  ] 2 tests.
+```
+
+Pour terminer ce tutoriel, essayons de faire un exercice de refactoring. Il ne s'agit pas seulement de définir de nouvelles fonctionnalités, mais aussi de restructurer le code et s'assurer que les tests passent toujours. L'approche TDD offre en effet beaucoup d'agilité pour effectuer de telles évolutions.
+
+Pour l'exemple, nous essayons un refactoring en deux étapes :
+1. créer un namespace `utils`, qui contiendra les définitions de la classe `MyParser`.
+2. ajouter une fonction dans la lib qui renvoie une instance unique de `MyParser`
+
+### Refactoring 1 : adding a namespace
+
+Pour la première étape, les tests doivent être légèrement modifiés de la manière suivante :
+
+
+```c++
+TEST(ParserTest, Parser_LowerSingleLetter)
+{
+    std::string output = "";
+    std::string input = "L";
+    std::string expected = "l";
+    utils::MyParser parser; // namespace utils
+    parser.convertToLowerCase(input, output);
+	ASSERT_EQ(output, "l");
+}
+
+TEST(ParserTest, Parser_UpperSingleLetter)
+{
+    std::string output = "";
+    std::string input = "l";
+    std::string expected = "L";
+    utils::MyParser parser; // namespace utils
+    parser.convertToUpperCase(input, output);
+	ASSERT_EQ(output, "L");
+}
+```
+
+Bien évidemment, ces tests échouent dans un premier temps puisque `MyParser.h` n'est pas défini dans un namespace. Les modifications suivantes vont permettre de valider les tests : 
+
+- `./toolset/include/MyParser.h`:
+```c++
+#ifndef MYPARSER_H
+#include <string>
+
+namespace utils
+{
+    class MyParser
+    {
+    public:
+        MyParser();
+        ~MyParser();
+
+        void convertToLowerCase(const std::string &, std::string &);
+        void convertToUpperCase(const std::string &, std::string &);
+    };
+} // namespace utils
+#endif // MYPARSER_H
+```
+
+- `MyParser.cpp` : il suffira de rajouter la ligne ci-dessous  en haut du fichier
+```c++
+using namespace utils;
+```
+
+### Refactoring 2: use a unique pointer
+
+Pour la deuxième étape du refactoring, l'idée est de rajouter une fonction --- `utils::getParser` --- qui renvoie une instance unique de `MyParser`. On testera cette fonction en utilisant une classe qui définit des fixtures :
+
+```c++
+//Les fixtures sont des attributs publiques des classes Test
+class UniqueParserTest : public Test
+{
+public:
+    utils::MyParser_t &_parser;
+
+    UniqueParserTest():_parser(utils::getParser()) {}
+};
+```
+Ici, la classe `UniqueParserTest` définit la fixture `UniqueParserTest::_parser` que l'on peut initialiser dans le constructeur de la classe. Il s'agira ensuite de vérifier dans les tests `UniqueParserTest`, d'une part, que la fonction `utils::getParseur` retoune toujours la même instance, et d'autre part, que toutes les fonctionnalités du parseur sont bien remplies par cette instance. On définit les nouveaux tests suivants (avec la MACRO TEST_F pour exploiter les fixtures) :
+
+```c++
+TEST_F(UniqueParserTest, Parser_UniqueParserIsUnique)
+{
+	utils::MyParser_t& p = utils::getParser();
+    ASSERT_EQ(std::addressof(p), std::addressof(_parser));
+}
+
+TEST_F(UniqueParserTest, Parser_UniqueParserLowerSingleLetter)
+{
+    std::string output = "";
+    std::string input = "L";
+    std::string expected = "l";
+    _parser->convertToLowerCase(input, output);
+	ASSERT_EQ(output, "l");
+}
+TEST_F(UniqueParserTest, Parser_UniqueParserUpperSingleLetter)
+{
+    std::string output = "";
+    std::string input = "l";
+    std::string expected = "L";
+    _parser->convertToUpperCase(input, output);
+	ASSERT_EQ(output, "L");
+}
+```
+
+Les tests échouent dans un premier temps, puis (après plusieurs essais en ce qui me concerne), les modifications suivantes permettent de valider les tests:
+
+- `MyParser.h`
+```c++
+#ifndef MYPARSER_H
+#include <string>
+#include <memory>
+
+namespace utils
+{
+    class MyParser
+    {
+    public:
+        MyParser();
+        ~MyParser();
+
+        void convertToLowerCase(const std::string &, std::string &);
+        void convertToUpperCase(const std::string &, std::string &);
+    };
+
+    typedef std::unique_ptr<MyParser> MyParser_t;
+
+    MyParser_t& getParser();
+} // namespace utils
+#endif // MYPARSER_H
+```
+- MyParser.cpp
+
+```c++
+#include "MyParser.h"
+using namespace utils;
+
+//MyParser::convertToLowerCase
+void MyParser::convertToLowerCase(const std::string &input, std::string &output)
+{
+    output = "";
+    for (auto c : input)
+        output.push_back(tolower(c));
+}
+//MyParser::convertToUpperCase
+void MyParser::convertToUpperCase(const std::string &input, std::string &output)
+{
+    output = "";
+    for (auto c : input)
+        output.push_back(toupper(c));
+}
+
+//MyParser::MyParser
+MyParser::MyParser()
+{
+}
+
+//MyParser::~MyParser
+MyParser::~MyParser()
+{
+}
+
+//MyParser_t& utils::getParser()
+MyParser_t& utils::getParser()
+{
+    static MyParser_t p = std::unique_ptr<MyParser>(new MyParser());
+    return p;
+}
+```
+
+On obtient le résulat suivant après l'exécution des tests:
+
+```bash
+> cd build && cmake -DCMAKE_BUILD_TYPE=Debug ..
+build> cmake --build . --config Debug
+build> ../bin/Debug/toolset_test
+
+==========] Running 5 tests from 2 test suites.
+[----------] Global test environment set-up.
+[----------] 2 tests from ParserTest
+[ RUN      ] ParserTest.Parser_LowerSingleLetter
+[       OK ] ParserTest.Parser_LowerSingleLetter (0 ms)
+[ RUN      ] ParserTest.Parser_UpperSingleLetter
+[       OK ] ParserTest.Parser_UpperSingleLetter (0 ms)
+[----------] 2 tests from ParserTest (0 ms total)
+
+[----------] 3 tests from UniqueParserTest
+[ RUN      ] UniqueParserTest.Parser_UniqueParserIsUnique
+[       OK ] UniqueParserTest.Parser_UniqueParserIsUnique (0 ms)
+[ RUN      ] UniqueParserTest.Parser_UniqueParserLowerSingleLetter
+[       OK ] UniqueParserTest.Parser_UniqueParserLowerSingleLetter (0 ms)
+[ RUN      ] UniqueParserTest.Parser_UniqueParserUpperSingleLetter
+[       OK ] UniqueParserTest.Parser_UniqueParserUpperSingleLetter (0 ms)
+[----------] 3 tests from UniqueParserTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 5 tests from 2 test suites ran. (0 ms total)
+[  PASSED  ] 5 tests.
+```
+
+### Conclusion of part 2
+
+Le TDD est une approche et pas un technique toute faite. Ce qui signifie qu'il faut s'exercer sur des projet avec rigueur et plus on s'exerce plus on a de bons réflexes. Même si les styles de programmation et les langages peuvent variés, il y a quand même quelques règles générales, valable pour tous type de projet. J'en retiens 3 :
+- les tests doivents êtres simples et exprimables en langage naturel
+- on doit absolument s'interdire de développer sans avoir défini des tests qui échouent au préalable
+- il faut éviter d'effectuer des modifications trop importantes sans tester régulièrement, i.e. il faut avancer par petites itérations.
+
+## Part 3/3 : Git, Github et Travis
 
 [1]: https://cmake.org/
 [2]: https://git-scm.com/
@@ -296,4 +651,4 @@ On peut donc déjà définir notre premier test unitaire qui échouera. C'est l'
 [6]: https://travis-ci.org/
 [7]: https://docs.microsoft.com/fr-fr/cpp/build/cmake-projects-in-visual-studio?view=vs-2019
 [8]: https://github.com/google/googletest
-[9]: https://langrsoft.com/resources#books
+[9]: https://en.wikipedia.org/wiki/Test-driven_development
