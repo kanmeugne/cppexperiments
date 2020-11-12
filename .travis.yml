@@ -1,0 +1,21 @@
+dist: trusty
+sudo: false
+language: cpp
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-7
+
+script:
+  - export CC=gcc-7
+  - export CXX=g++-7
+  - cd tddwithgtest && mkdir build && cd build
+  - cmake -DCOVERAGE=1 ..
+  - cmake --build . 
+  - ../bin/toolset_test
+
+after_success:
+  - coveralls --root . -E ".*gtest.*" -E ".*CMakeFiles.*"
